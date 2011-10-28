@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				xmlns:mx="library://ns.adobe.com/flex/mx" 
+				xmlns:s="library://ns.adobe.com/flex/spark"
+				layout="absolute" 
+				width="100%" 
+				height="100%"
+				frameRate="60" 
+				applicationComplete="enterConnectingState(event)"
+				enterFrame="enterFrame(event)"
+				resize="resizeHandler(event)"
+				currentState="connecting" 
+				backgroundColor="#000000">
+	
+	<!-- States --> 
+	<mx:states>
+		<mx:State name="connecting" />
+		<mx:State name="rendering" enterState="enterRendering(event)" exitState="exitRendering(event)"/>
+	</mx:states>
+	
+	
+	<!-- Scripts -->
+	<fx:Script>
+		<![CDATA[
+			
+			import flash.display.StageDisplayState;
+			
+			import ltg.ps.clients.vector.VectorRenderingManager;
+			import ltg.ps.clients.commons.ClientNetworkController;
+			
+			import mx.events.FlexEvent;
+			import mx.events.ResizeEvent;
+			import mx.managers.BrowserManager;
+			import mx.managers.IBrowserManager;
+			import mx.utils.URLUtil;
+			
+			import org.flexunit.runner.notification.async.WaitingListener;
+			
+			// Mode
+			//public static 	var mode:String = "DEBUG";
+			public static 	var mode:String = "RELEASE";
+			
+			// Components
+			[Bindable]
+			protected var xmpp:ClientNetworkController = null;
+			protected var helio:Helioroom = null;
+			protected var rm:VectorRenderingManager = new VectorRenderingManager();
+			// URL Parameters
+			private 	var bm:IBrowserManager = null;
+			[Bindable]
+			private 	var serverhost:String;
+			[Bindable]
+			private		var username:String;
+			[Bindable]
+			private		var password:String;
+			[Bindable]
+			private		var phenomenaId:String;
+
+			// Full screen state
+			[Bindable]
+			private var fullScreenState:String;
+			
+			
+			// Executed once per frame
+			protected function enterFrame(event:Event):void {
+				if (out!=null)
+					out.text = rm.enterFrame();
+			}
+			
+			
+			protected function enterConnectingState(event:FlexEvent):void {
+				// Save fullscreen state and add resize callback
+				fullScreenState = stage.displayState;
+				stage.addEventListener(FullScreenEvent.FULL_SCREEN, fullScreenhandler);
+				// Get and initialize URL parameters
+				var s:Array = [null,null];
+				try {
+					bm = BrowserManager.getInstance();                
+					bm.init();
+				} catch (e:Error) {
+					// Not executing in the browser
+				}
+				if(bm!=null) {
+					var o:Object = URLUtil.stringToObject(bm.fragment, "&");
+					if (o.serverhost!= null && o.username!=null && o.password!=null && o.pid!=null) {
+						this.serverhost = o.serverhost;
+						this.username = o.username;
+						this.password = o.password;
+						this.phenomenaId = o.pid;
+					} else {
+						if (mode=="DEBUG") {
+							this.serverhost = "hydrogen.evl.uic.edu";
+							this.username = "hr1_w1@hydrogen.evl.uic.edu";
+							this.password = "hr1_w1";
+							this.phenomenaId = "hr1@";
+						} else {
+							// If this branch executes and we are in a release context 
+							// we have no clue about our connection credentials, hence we stay idle
+							output.text = "Impossible to parse URL parameters!";
+							return;
+						}
+					}
+				} 
+				// Initialize Helioroom
+				helio = new Helioroom();
+				// Setup XMPP listeners and connect to server
+				xmpp = new ClientNetworkController(this.serverhost, this.username, this.password, this.phenomenaId);
+				xmpp.setupMessageHanlder(helio.onUpdateReceived);
+				helio.addEventListener(Helioroom.PHEN_INIT, onPhenInit);
+				helio.addEventListener(Helioroom.PHEN_UPDATE_DONE, onPhenUpdateDone);
+				
+				xmpp.connect();
+			}
+			
+			
+			// Once the phenomena has been initialized the rendering can start
+			protected function onPhenInit(event:Event = null):void {
+				setCurrentState("rendering");
+			}
+			
+			
+			// Once the phenomena has been updated plants needs to be re-drawn
+			protected function onPhenUpdateDone(event:Event = null):void {
+				rm.reDrawPlanets();
+			}
+			
+			
+			protected function enterRendering(event:FlexEvent):void {
+				rm.startup(myCanvas, helio);
+			}
+			
+			
+			protected function exitRendering(event:FlexEvent):void {
+				rm.shutdown();
+			}
+			
+
+			protected function fullScreenBtn_clickHandler(event:MouseEvent):void {
+				fullScreenState = StageDisplayState.FULL_SCREEN;
+				try {
+					stage.displayState = fullScreenState;
+				} catch (any:*) {
+					// ignore exceptions
+				}
+			}
+			
+			
+			protected function fullScreenhandler(event:FullScreenEvent):void {
+				if (event.fullScreen) {
+					fullScreenBtn.visible = false;
+				} else {
+					fullScreenState = StageDisplayState.NORMAL;
+					fullScreenBtn.visible = true;
+				}
+			}
+
+
+			protected function resizeHandler(event:ResizeEvent):void {
+				rm.updateAppSize(width, height);
+			}
+
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<mx:Text includeIn="connecting" color="#FFFFFF" text="Connecting...
+			 &#013;Host: {serverhost}
+			 &#013;Username: {username}
+			 &#013;Password: {password}
+			 &#013;PhenomenaID: {phenomenaId}}" fontSize="16" id="output" textAlign="center" width="600" height="120" horizontalCenter="0" verticalCenter="0"/>
+	<mx:Canvas x="0" y="0" width="100%" height="100%" id="myCanvas" includeIn="rendering"/>
+	<s:Button includeIn="rendering" x="20" y="20" label="Go Fullscreen" id="fullScreenBtn" click="fullScreenBtn_clickHandler(event)"/>
+	<mx:Text includeIn="rendering" color="#FF0000" text="" fontSize="12" id="out" textAlign="center" width="600" height="120" horizontalCenter="0" verticalCenter="0"/>
+	
+	<!--
+	<s:VGroup includeIn="rendering" x="150" y="20" >
+		<mx:Text color="#FFFFFF" id="url_string" text= "{bm.url}" />
+		<mx:Text color="#FFFFFF" id="url_fragment" text="{bm.fragment}" />
+		<mx:Text color="#FFFFFF" id="url_params" text="Username: {this.username}, Pass: {this.password}, PId: {this.phenomenaId}" />
+	</s:VGroup>
+	<s:VGroup includeIn="rendering" x="150" y="20" >
+		<mx:Text color="#FFFFFF" text="width={myCanvas.width}" />
+		<mx:Text color="#FFFFFF" text="height={myCanvas.height}" />
+		<mx:Text color="#FFFFFF" text="displayState={fullScreenState}" />
+	</s:VGroup>
+	-->
+	
+	
+</mx:Application>
