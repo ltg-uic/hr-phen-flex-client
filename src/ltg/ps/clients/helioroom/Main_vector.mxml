@@ -82,7 +82,7 @@
 				}
 				if(bm!=null) {
 					var o:Object = URLUtil.stringToObject(bm.fragment, "&");
-					if (o.serverhost!= null && o.username!=null && o.password!=null && o.pid!=null) {
+					if (o.serverhost!= null && o.username!=null && o.password!=null) {
 						this.serverhost = o.serverhost;
 						this.username = o.username;
 						this.password = o.password;
