@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<s:Application 	xmlns:fx="http://ns.adobe.com/mxml/2009" 
-			   	xmlns:s="library://ns.adobe.com/flex/spark" 
-			   	xmlns:mx="library://ns.adobe.com/flex/mx"
-				backgroundColor="#000000" 
-				currentState="connecting"
+<mx:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				xmlns:mx="library://ns.adobe.com/flex/mx" 
+				xmlns:s="library://ns.adobe.com/flex/spark"
+				layout="absolute" 
 				width="100%" 
 				height="100%"
 				frameRate="60" 
 				applicationComplete="enterConnectingState(event)"
 				enterFrame="enterFrame(event)"
 				resize="resizeHandler(event)"
-				>
+				currentState="connecting" 
+				backgroundColor="#000000">
 	
 	<!-- States --> 
-	<s:states>
-		<s:State name="connecting" />
-		<s:State name="rendering" enterState="enterRendering(event)" exitState="exitRendering(event)"/>
-	</s:states>
+	<mx:states>
+		<mx:State name="connecting" />
+		<mx:State name="rendering" enterState="enterRendering(event)" exitState="exitRendering(event)"/>
+	</mx:states>
 	
 	
 	<!-- Scripts -->
@@ -25,8 +25,8 @@
 			
 			import flash.display.StageDisplayState;
 			
-			import ltg.ps.clients.commons.ClientNetworkController;
 			import ltg.ps.clients.vector.VectorRenderingManager;
+			import ltg.ps.clients.commons.ClientNetworkController;
 			
 			import mx.events.FlexEvent;
 			import mx.events.ResizeEvent;
@@ -45,6 +45,16 @@
 			protected var xmpp:ClientNetworkController = null;
 			protected var helio:Helioroom = null;
 			protected var rm:VectorRenderingManager = new VectorRenderingManager();
+			// URL Parameters
+			private 	var bm:IBrowserManager = null;
+			[Bindable]
+			private 	var serverhost:String;
+			[Bindable]
+			private		var username:String;
+			[Bindable]
+			private		var password:String;
+			[Bindable]
+			private		var phenomenaId:String;
 
 			// Full screen state
 			[Bindable]
@@ -62,37 +72,39 @@
 				// Save fullscreen state and add resize callback
 				fullScreenState = stage.displayState;
 				stage.addEventListener(FullScreenEvent.FULL_SCREEN, fullScreenhandler);
-				var serverHost:String = ""; 
-				var username:String = ""; 
-				var password:String = ""; 
-				var phenomenaId:String = "";
-				if (mode=="RELEASE") {
-					serverHost = this.parameters.host;
-					username = this.parameters.username;
-					password = this.parameters.password;
-					phenomenaId = this.parameters.pid;
-					if (serverHost=="" || username=="" || password=="" || phenomenaId=="" ||
-						serverHost==null || username==null || password==null || phenomenaId==null) {
-						output.text = "Impossible to parse URL parameters!";
-//						var tx:String = "";
-//						for (var i:String in this.parameters) { 
-//							tx = tx + i + ": " + this.parameters[i] + "\n"; 
-//						} 
-//						output.text = tx;
-//						return;
-					}
+				// Get and initialize URL parameters
+				var s:Array = [null,null];
+				try {
+					bm = BrowserManager.getInstance();                
+					bm.init();
+				} catch (e:Error) {
+					// Not executing in the browser
 				}
-				if (mode=="DEBUG") {
-					serverHost = "phenomena.evl.uic.edu";
-					username = "hr1_w1@phenomena.evl.uic.edu";
-					password = "hr1_w1";
-					phenomenaId = "hr1@";
+				if(bm!=null) {
+					var o:Object = URLUtil.stringToObject(bm.fragment, "&");
+					if (o.serverhost!= null && o.username!=null && o.password!=null && o.pid!=null) {
+						this.serverhost = o.serverhost;
+						this.username = o.username;
+						this.password = o.password;
+						this.phenomenaId = o.pid;
+					} else {
+						if (mode=="DEBUG") {
+							this.serverhost = "hydrogen.evl.uic.edu";
+							this.username = "hr1_w1@hydrogen.evl.uic.edu";
+							this.password = "hr1_w1";
+							this.phenomenaId = "hr1@";
+						} else {
+							// If this branch executes and we are in a release context 
+							// we have no clue about our connection credentials, hence we stay idle
+							output.text = "Impossible to parse URL parameters!";
+							return;
+						}
+					}
 				} 
 				// Initialize Helioroom
 				helio = new Helioroom();
 				// Setup XMPP listeners and connect to server
-				xmpp = new ClientNetworkController(serverHost, username, password, 
-					phenomenaId);
+				xmpp = new ClientNetworkController(this.serverhost, this.username, this.password, this.phenomenaId);
 				xmpp.setupMessageHanlder(helio.onUpdateReceived);
 				helio.addEventListener(Helioroom.PHEN_INIT, onPhenInit);
 				helio.addEventListener(Helioroom.PHEN_UPDATE_DONE, onPhenUpdateDone);
@@ -154,7 +166,11 @@
 		<!-- Place non-visual elements (e.g., services, value objects) here -->
 	</fx:Declarations>
 	
-	<mx:Text includeIn="connecting" color="#FFFFFF" text="Connecting..." fontSize="16" id="output" textAlign="center" width="600" height="120" horizontalCenter="0" verticalCenter="0"/>
+	<mx:Text includeIn="connecting" color="#FFFFFF" text="Connecting...
+			 &#013;Host: {serverhost}
+			 &#013;Username: {username}
+			 &#013;Password: {password}
+			 &#013;PhenomenaID: {phenomenaId}}" fontSize="16" id="output" textAlign="center" width="600" height="120" horizontalCenter="0" verticalCenter="0"/>
 	<mx:Canvas x="0" y="0" width="100%" height="100%" id="myCanvas" includeIn="rendering"/>
 	<s:Button includeIn="rendering" x="20" y="20" label="Go Fullscreen" id="fullScreenBtn" click="fullScreenBtn_clickHandler(event)"/>
 	<mx:Text includeIn="rendering" color="#FF0000" text="" fontSize="12" id="out" textAlign="center" width="600" height="120" horizontalCenter="0" verticalCenter="0"/>
@@ -173,4 +189,4 @@
 	-->
 	
 	
-</s:Application>
+</mx:Application>
