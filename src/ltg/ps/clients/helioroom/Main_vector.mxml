@@ -71,15 +71,9 @@
 					username = this.parameters.username;
 					password = this.parameters.password;
 					phenomenaId = this.parameters.pid;
-					if (serverHost=="" || username=="" || password=="" || phenomenaId=="" ||
-						serverHost==null || username==null || password==null || phenomenaId==null) {
+					if (username=="" || password=="" || phenomenaId=="" ||
+						username==null || password==null || phenomenaId==null) {
 						output.text = "Impossible to parse URL parameters!";
-//						var tx:String = "";
-//						for (var i:String in this.parameters) { 
-//							tx = tx + i + ": " + this.parameters[i] + "\n"; 
-//						} 
-//						output.text = tx;
-//						return;
 					}
 				}
 				if (mode=="DEBUG") {
