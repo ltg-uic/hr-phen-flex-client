@@ -73,6 +73,7 @@
 					if (username=="" || password=="" || phenomenaId=="" ||
 						username==null || password==null || phenomenaId==null) {
 						output.text = "Impossible to parse URL parameters!";
+						return;
 					}
 				}
 				if (mode=="DEBUG") {

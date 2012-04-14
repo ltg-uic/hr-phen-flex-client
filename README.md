@@ -1,4 +1,4 @@
-WallCology Flex client
+HelioRoom Flex client
 ======================
 The documentation for this package can be found [here][wiki].
 
