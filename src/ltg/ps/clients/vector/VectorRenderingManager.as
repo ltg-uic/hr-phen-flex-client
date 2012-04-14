@@ -18,7 +18,7 @@ package ltg.ps.clients.vector {
 	public class VectorRenderingManager {
 		
 		/// Resources
-		[Embed(source="/Users/tebemis/Workspace/Flash/helioroom-sim-flex-client/resources/stars2.jpeg")]
+		[Embed(source="../resources/stars2.jpeg")]
 		public static var Stars:Class;
 		
 		/// static singleton instance 
