@@ -11,6 +11,7 @@
     <!--[if lt IE 9]>
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
+    <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
   </head>
   <body>
     <div class="wrapper">
@@ -33,18 +34,38 @@
         <h1>HelioRoom Flex client</h1>
 		<p>This page contains a mish-mash of documentation</p>
 		
+		<h3>Orbital time calculator</h3>
+		
 		<table>
-			<tr><th>Planet</th><th>Orbital period (in earth years)</th><th>Orbital period in classroom time</th> </tr>
-			<tr><td>Mercury</td><td>0.241</td><td><input type="text" name="mercury"> minutes</td></tr>
-			<tr><td>Venus</td><td>0.615</td><td><span id="venus">=earth*0.615</span></td></tr>
-			<tr><td>Earth</td><td>1</td><td><span id="earth">=mercury*4.152</span></td></tr>
-			<tr><td>Jupiter</td><td>11.862</td><td><span id="jupiter">=earth*11.862</span></td></tr>
-			<tr><td>Saturn</td><td>29.457</td><td><span id="saturn">=earth*29.457</span></td></tr>
-			<tr><td>Uranus</td><td>84.323</td><td><span id="uranus">=earth*84.323</span></td></tr>
-			<tr><td>Neptune</td><td>164.79</td><td><span id="neptune">=earth*164.79</span></td></tr>
-			<tr><td>Pluto</td><td>246.04</td><td><span id="jupiter">=earth*246.04</span></td></tr>
-			
+			<tr><th>Planet</th><th>Orbital period (in earth years)</th><th>Orbital period (in minutes)</th> </tr>
+			<tr><td>Mercury</td><td>0.241</td><td><input id="mercury" type="text" ></td></tr>
+			<tr><td>Venus</td><td>0.615</td><td><span id="venus"></span></td></tr>
+			<tr><td>Earth</td><td>1</td><td><span id="earth"></span></td> </tr>
+			<tr><td>Mars</td><td>1.881</td><td><span id="mars"></span></td> </tr>
+			<tr><td>Jupiter</td><td>11.862</td><td><span id="jupiter"></span></td></tr>
+			<tr><td>Saturn</td><td>29.457</td><td><span id="saturn"></span></td></tr>
+			<tr><td>Uranus</td><td>84.323</td><td><span id="uranus"></span></td></tr>
+			<tr><td>Neptune</td><td>164.79</td><td><span id="neptune"></span></td></tr>
+			<tr><td>Pluto</td><td>246.04</td><td><span id="pluto"></span></td></tr>
 		</table>
+		
+		<script>
+		$( document ).ready(function() {
+			$("#mercury").on( "change", function() {
+				$("#venus").html($("#mercury").val()*4.152*0.615)
+				$("#earth").html($("#mercury").val()*4.152)
+				$("#mars").html($("#mercury").val()*4.152*1.881)
+				$("#jupiter").html($("#mercury").val()*4.152*11.862)
+				$("#saturn").html($("#mercury").val()*4.152*29.457)
+				$("#uranus").html($("#mercury").val()*4.152*84.323)
+				$("#neptune").html($("#mercury").val()*4.152*164.79)
+				$("#pluto").html($("#mercury").val()*4.152*246.04)
+			});		
+		});
+		</script>
+		
+		<h3>XMPP messages</h3>
+		Look at the markdown page <a href="https://gist.github.com/tebemis/5048846#file-helio_xmpp_messages-md">here</a>.
 
 
       </section>
